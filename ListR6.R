@@ -18,6 +18,11 @@ ListR6 <- R6::R6Class(
             }
             invisible(self)
         },
+        extend = function(x){
+            stopifnot(is.ListR6(x))
+            private$flattenAppend(x$elements)
+            invisible(self)
+        },
         pop = function(i = NULL){
             if(is.null(i)){
                 pop_index <- length(self$elements)
@@ -39,12 +44,7 @@ ListR6 <- R6::R6Class(
                 # if pop single element, don't pop it as R6
                 return(pop_elements[[1]])
             } else {
-                # if pop multiple elements, pop as R6
-                return_list <- ListR6$new()
-                for(e in pop_elements){
-                    return_list$append(e)
-                }
-                return(return_list)
+                return(private$flattenNew(pop_elements))
             }
 
         },
@@ -66,30 +66,65 @@ ListR6 <- R6::R6Class(
             }
             invisible(self)
         },
-        `[` = function(i){
-            elements <- self$elements[i]
-            return_list <- ListR6$new()
-            for(e in elements){
-                return_list$append(e)
-            }
-            return(return_list)
+        reverse = function(){
+            self$elements <- rev(self$elements)
+            invisible(self)
         },
-        `[<-` = function(i,e){
-            self$elements[i] <- e
+        `[` = function(i){
+            return(private$flattenNew(self$elements[i]))
+        },
+        `[<-` = function(i,value){
+            self$elements[i] <- value
             invisible(self)
         },
         `[[` = function(i){
             stopifnot(length(i) == 1)
             return(self$elements[[i]])
         },
+        `[[<-` = function(i,value){
+            stopifnot(length(i) == 1)
+            self$elements[[i]] <- value
+            invisible(self)
+        },
+        toList = function(){
+            return(self$elements)
+        },
         print = function(){
             cat("ListR6:\n")
             print(self$elements)
         }
+    ),
+    private = list(
+        # flatten a list
+        flattenNew = function(l){
+            return_list <- ListR6$new()
+            for(e in l){
+                return_list$append(e)
+            }
+            return(return_list)
+        },
+        flattenAppend = function(l){
+            for(e in l){
+                self$append(e)
+            }
+            invisible(self)
+        }
+    ),
+    active = list(
+        length = function(){
+            return(length(self$elements))  
+        }
     )
 )
 
+
+# add S3 methods for ListR6 which makes it compatible with built-in functions
+
 is.ListR6 <- function(x) "ListR6" %in% class(x)
 `[.ListR6` <- function(x,i) x$`[`(i) 
-`[<-.ListR6` <- function(x, i,e) x$`[<-`(i,e) 
-`[[.ListR6` <- function(x,i) x$`[[`(i) 
+`[<-.ListR6` <- function(x,i,value) x$`[<-`(i,value)
+`[[<-.ListR6` <- function(x,i,value) x$`[[<-`(i,value)
+`[[.ListR6` <- function(x,i) x$`[[`(i)
+as.list.ListR6 <- function(x) x$elements
+length.ListR6 <- function(x) x$length
+names.ListR6 <- function(x) names(x$elements)

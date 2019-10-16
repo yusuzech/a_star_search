@@ -1,7 +1,7 @@
 source("R6Class.R")
 source("ListR6.R")
 
-test_that("List creation, append, pop method works",{
+test_that("List creation, append, pop, extend, reverse method works",{
     testList <- ListR6$new(list(x=1,2),2)
     testList$append("a","b",list(y=2))
     # append works
@@ -35,9 +35,17 @@ test_that("List creation, append, pop method works",{
     expect_identical(testList$elements[[5]],1)
     # insert outside of bounds cause error
     expect_error(testList$insert(7,"position6"))
+    
+    # extend works
+    testList$extend(testList)
+    expect_equal(length(testList),10)
+    
+    # reverse works
+    testList$reverse()
+    expect_identical(testList[[1]],1)
 })
 
-testthat::test_that("List subsetting, element extraction works",{
+testthat::test_that("List subsetting, element extraction works; extend works",{
     # subsetting works
     testList <- ListR6$new(list(x=1,2),2,3,4,"five")
     list_subset <- testList[c(1,5)]
@@ -45,6 +53,10 @@ testthat::test_that("List subsetting, element extraction works",{
     
     # extracting element works
     expect_identical(testList[[2]],2)
-    
-    # assi
+    # assignment works
+    testList[c(1,2)] <- "replaced"
+    expect_identical(testList$elements[c(1,2)],list("replaced","replaced"))
+    # double bracket replacement works
+    testList[1] <- "replaced again"
+    expect_identical(testList$elements[[1]],"replaced again")
 })
